@@ -54,4 +54,47 @@ describe('lodown', function() {
             expect(lodown.identity(fn)).to.eql(fn);
         });
     });
+    
+    describe('typeOf', function() {
+        it('should return a String representing the type of the value provided', function() {
+            expect(lodown.typeOf([])).to.equal('array');
+            expect(lodown.typeOf('a')).to.equal('string');
+            expect(lodown.typeOf(null)).to.equal('null');
+            expect(lodown.typeOf(new Date())).to.equal('date');
+            expect(lodown.typeOf(function () { })).to.equal('function');
+        });
+    });
+    
+    describe('first', function() {
+        it('should return the first value or n values in an Array', function() {
+            expect(lodown.first(["a","b","c"])).to.equal("a");
+            expect(lodown.first(["a","b","c"], 2)).to.eql(["a","b"]);
+        });
+        it('should return empty Array if first is invoked with negative n value', function() {
+            expect(lodown.first(["a","b","c"], -1)).to.eql([]);
+        });
+        it('Should return the whole Array first is invoked with n value greater than the array\'s length.', function(){
+            expect(lodown.first(["a","b","c"], 5)).to.eql(["a","b","c"]);
+        });
+        it('Should return empty Array if the array param is not an Array.', function() {
+            expect(lodown.first({a:"b"}, 2)).to.eql([]);
+        });
+    });
+    
+    describe('last', function() {
+        it('should return the last value or n values in an Array', function() {
+            expect(lodown.last(["a","b","c"])).to.equal("c");
+            expect(lodown.last(["a","b","c"], 2)).to.eql(["b","c"]);
+        });
+        it('should return empty Array if last is invoked with negative n value', function() {
+            expect(lodown.last(["a","b","c"], -1)).to.eql([]);
+        });
+        it('Should return the whole Array last is invoked with n value greater than the array\'s length.', function() {
+            expect(lodown.last(["a","b","c"], 5)).to.eql(["a","b","c"]);
+        });
+        it('Should return empty Array if the Array param is not an Array.', function() {
+            expect(lodown.last({a:"b"}, 2)).to.eql([]);
+        });
+    });
+
 });
