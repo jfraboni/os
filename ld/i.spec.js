@@ -1,7 +1,7 @@
 var 
     expect = require('chai').expect,
     sinon = require('sinon'),
-    lodown = require('../index'),
+    lodown = require('../../index'),
     customers = require('./fixtures/customers.json');
 
 describe('lodown', function() {
