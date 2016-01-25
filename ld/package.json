@@ -1,0 +1,35 @@
+{
+  "name": "lodown",
+  "version": "0.0.1",
+  "description": "An npm functional programming library project",
+  "main": "index.js",
+  "scripts": {
+    "test": "istanbul cover _mocha -- .master/test/ -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OperationSpark/lodown.git"
+  },
+  "keywords": [
+    "lodown",
+    "functional",
+    "programming",
+    "tdd",
+    "mocha",
+    "chai",
+    "istanbul"
+  ],
+  "author": "jfraboni",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OperationSpark/lodown/issues"
+  },
+  "homepage": "https://github.com/OperationSpark/lodown#readme",
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "i": "^0.3.4",
+    "istanbul": "^0.4.2",
+    "mocha": "^2.3.4",
+    "sinon": "^1.17.2"
+  }
+}
