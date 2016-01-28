@@ -138,4 +138,100 @@ describe('lodown', function() {
             expect(input).to.eql({one: 1, two: 2, three: 3, four: 4});
         });
     });
+    
+    describe('unique', function() {
+        it('should return an Array with no duplicates and have no side effects', function() {
+            var input = ["a", 1, 1, "a", "c", false, "b" , 5, "c", null, false, null];
+            expect(lodown.unique(input)).to.eql(["a", 1, "c", false, "b", 5, null]);
+            expect(input).to.eql(["a", 1, 1, "a", "c", false, "b" , 5, "c", null, false, null]);
+        });
+    });
+    
+    describe('reduce', function() {
+        var inputArray = [10, 20, 30, 40];
+        it('should work with an Array and a seed', function() {
+            expect(lodown.reduce(inputArray, function(memo, element, i){
+                return memo + element + i;
+            }, 10)).to.equal(116);
+        });
+        it('should work without a seed', function() {
+            expect(lodown.reduce(inputArray, function(memo, element, i){
+                return memo * element * (i+1);
+            })).to.equal(5760000);
+        });
+        it('should work when seed is falsy', function() {
+            expect(lodown.reduce(inputArray, function(memo, element, i){
+                return memo * element * (i+1);
+            }, 0)).to.equal(0);
+        });
+    });
+    
+    describe('some', function() {
+        var inputData = [2, 4, 6, 7, 8];
+        var inputDataTruthy = [1, [], true, "a"];
+        var inputDataFalsy = ["", 0, false, null, undefined, NaN];
+        var inputObject = {a:"one", b:"two", c:"three"};
+        
+        it('should return true when at least one value passes the test, wihtout side effects', function() {
+            expect(lodown.some(inputData, function(v){
+                return v === 7;
+            })).to.be.true;
+            expect(inputData).to.eql([2, 4, 6, 7, 8]);
+        });
+        
+        it('should return false when all values fail the test', function() {
+            expect(lodown.some(inputData, function(v){
+                return v > 10;
+            })).to.be.false;
+        });
+        
+        it('should handle objects', function() {
+            expect(lodown.some(inputObject, function(v, k, o){
+                return ["aone3", "btwo3"].indexOf(k + v + Object.keys(o).length) !== -1;
+            })).to.be.true;
+        });
+        
+        it('should return true for collection of truthy values when no test function is provided', function() {
+            expect(lodown.some(inputDataTruthy)).to.be.true;
+        });
+        
+        it('should return false for collection of falsy values when no test function is provided', function() {
+            expect(lodown.some(inputDataFalsy)).to.be.false;
+        });
+    });
+    
+    describe('every', function() {
+        var inputData = [2, 4, 6, 7, 8];
+        var inputDataTruthy = [1, [], true, "a"];
+        var inputDataFalsy = ["", 0, false, null];
+        var inputObject = {a:"one", b:"two", c:"three"};
+        
+        it('should return true when all collection values pass the test, without side effects', function() {
+            expect(lodown.every(inputData, function(v){
+                return v % 2 === 0 || v === 7;
+            })).to.be.true;
+            expect(inputData).to.eql([2, 4, 6, 7, 8]);
+        });
+        
+        it('should return false when at least one collection value fails the test', function() {
+            expect(lodown.every(inputData, function(v){
+                return v % 2 === 0;
+            })).to.be.false;
+        });
+        
+        it('should handle objects', function() {
+            expect(lodown.every(inputObject, function(v,k,o){
+                return ["aone3","btwo3","cthree3"].indexOf(k+v+Object.keys(o).length) !== -1;
+            })).to.be.true;
+        });
+        
+        it('should return true for collection of truthy values when no test function is provided', function() {
+            expect(lodown.every(inputDataTruthy)).to.be.true;
+        });
+        
+        it('should return false for collection of falsy values when no test function is provided', function() {
+            expect(lodown.every(inputDataFalsy)).to.be.false;
+        });
+
+    });
 });

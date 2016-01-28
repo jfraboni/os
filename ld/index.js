@@ -150,3 +150,102 @@ function partition(array, test) {
     return [filter(array, test), reject(array, test)];
 }
 module.exports.partition = partition;
+
+function indexOf(array, target) {
+    for(var i = 0; i < array.length; i++) {
+        if (array[i] === target) { return i; }
+    }
+    return -1;
+}
+module.exports.indexOf = indexOf;
+
+function unique(array) {
+    return reduce(array, function(uniqueVals, value) {
+        if (indexOf(uniqueVals, value) === -1) uniqueVals.push(value);
+        return uniqueVals;
+    }, []);
+}
+module.exports.unique = unique;
+
+function reduce(collection, summarize, start) {
+    var summary = start;
+    var startAt = 0;
+    if(start === undefined) {
+        summary = getFirstCollectionValue(collection);
+        startAt = 1;
+    }
+    eachAt(collection, function (value, position, collection) {
+        summary = summarize(summary, value, position, collection);
+    }, startAt);
+    return summary;
+}
+module.exports.reduce = reduce;
+
+function getFirstCollectionValue(collection) {
+    if(Array.isArray(collection)) {
+        return collection[0];
+    }
+    return collection[first(Object.keys(collection))];
+}
+
+
+function eachAt(collection, action, startAtIndex) {
+    startAtIndex = startAtIndex || 0;
+    if(Array.isArray(collection)) {
+        for(var i = startAtIndex; i < collection.length; i++) {
+            action(collection[i], i, collection);
+        }
+    } else {
+        var keys = Object.keys(collection);
+        for(var j = startAtIndex; j < keys.length; j++) {
+            action(collection[keys[j]], keys[j], collection);
+        }
+    }
+}
+module.exports.eachAt = eachAt;
+
+function eachAtRight(collection, action, startAtIndex) {
+    if(Array.isArray(collection)) {
+        startAtIndex = startAtIndex || collection.length - 1;
+        for(var i = startAtIndex; i < collection.length; i++) {
+            action(collection[i], i, collection);
+        }
+    } else {
+        var keys = Object.keys(collection);
+        startAtIndex = startAtIndex || keys.length - 1;
+        for(var j = startAtIndex; j < keys.length; j++) {
+            action(collection[keys[j]], keys[j], collection);
+        }
+    }
+}
+module.exports.eachAtRight = eachAtRight;
+
+function some(collection, test) {
+    test = test || identity;
+    if(Array.isArray(collection)) {
+        for(var i = 0; i < collection.length; i++) {
+            if(test(collection[i], i, collection)) { return true; }
+        }
+    } else {
+        for(var key in collection) {
+            if(test(collection[key], key, collection)) { return true; }
+        }
+    }
+    return false;
+}
+module.exports.some = some;
+
+function every(collection, test) {
+    test = test || identity;
+    if(Array.isArray(collection)) {
+        for(var i = 0; i < collection.length; i++) {
+            if(!test(collection[i], i, collection)) { return false; }
+        }
+    } else {
+        for(var key in collection) {
+            if(!test(collection[key], key, collection)) { return false; }
+        }
+    }
+    return true;
+}
+module.exports.every = every;
