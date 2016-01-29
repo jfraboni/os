@@ -35,11 +35,44 @@ describe('lodown', function() {
                 expect(action.calledWith(customer, index, customers)).to.be.true;
             });
         });
-   
+        
         it('should iterate an Object, applying action for each value, key of value, and Object', function() {
             var action = sinon.spy();
             var customer = customers[0];
             lodown.each(customer, action);
+            expect(action.callCount).to.equal(Object.keys(customer).length);
+            for(var key in customer) {
+                expect(action.calledWith(customer[key], key, customer)).to.be.true;
+            }
+        });
+    });
+    
+    describe('eachRight', function() {
+        it('should iterate an Array in reverse, applying action to each element, index of the element, and the collection', function() {
+            
+            var values = [1, 2, 3, 4, 5];
+            var reversed = [];
+            function action(value, index, coll) {
+                reversed.push(index);
+            }
+            lodown.eachRight(values, action);
+            expect(reversed).to.eql([4, 3, 2, 1, 0]);
+        });
+        
+        it('should, when iterating, pass to the action each element, index of the element, and the collection', function() {
+            var action = sinon.spy();
+            var values = [1, 2, 3, 4, 5];
+            lodown.eachRight(values, action);
+            expect(action.callCount).to.equal(values.length);
+            values.forEach(function(value, index){
+                expect(action.calledWith(value, index, values)).to.be.true;
+            });
+        });
+        
+        it('should iterate an Object, applying action for each value, key of value, and Object', function() {
+            var action = sinon.spy();
+            var customer = customers[0];
+            lodown.eachRight(customer, action);
             expect(action.callCount).to.equal(Object.keys(customer).length);
             for(var key in customer) {
                 expect(action.calledWith(customer[key], key, customer)).to.be.true;
@@ -159,8 +192,41 @@ describe('lodown', function() {
                 return memo * element * (i+1);
             })).to.equal(5760000);
         });
+        it('should work without a seed when collection is Object', function() {
+            var input = {one: 'a', two: 'b', three: 'c'};
+            expect(lodown.reduce(input, function(memo, value, i){
+                return memo + value;
+            })).to.equal('abc');
+        });
         it('should work when seed is falsy', function() {
             expect(lodown.reduce(inputArray, function(memo, element, i){
+                return memo * element * (i+1);
+            }, 0)).to.equal(0);
+        });
+    });
+    
+    describe('reduceRight', function() {
+        it('should work with an Array and a seed', function() {
+            var inputArray = ['k', 'c', 'u'];
+            expect(lodown.reduceRight(inputArray, function(memo, element, i){
+                return memo + element;
+            }, 'f')).to.equal('fuck');
+        });
+        it('should work without a seed', function() {
+            var inputArray = ['k', 'c', 'u', 'f'];
+            expect(lodown.reduceRight(inputArray, function(memo, element, i){
+                return memo + element;
+            })).to.equal('fuck');
+        });
+        it('should work without a seed when collection is Object', function() {
+            var input = {one: 'a', two: 'b', three: 'c'};
+            expect(lodown.reduceRight(input, function(memo, value, i){
+                return memo + value;
+            })).to.equal('cba');
+        });
+        it('should work when seed is falsy', function() {
+            var inputArray = [1, 2, 3, 4];
+            expect(lodown.reduceRight(inputArray, function(memo, element, i){
                 return memo * element * (i+1);
             }, 0)).to.equal(0);
         });
@@ -220,9 +286,15 @@ describe('lodown', function() {
         });
         
         it('should handle objects', function() {
-            expect(lodown.every(inputObject, function(v,k,o){
-                return ["aone3","btwo3","cthree3"].indexOf(k+v+Object.keys(o).length) !== -1;
+            expect(lodown.every(inputObject, function(v, k, o){
+                return ["aone3","btwo3","cthree3"].indexOf(k + v + Object.keys(o).length) !== -1;
             })).to.be.true;
+        });
+        
+        it('should return false if at least one value in object fails test', function() {
+            expect(lodown.every(inputObject, function(v, k, o){
+                return v[0] === 't';
+            })).to.be.false;
         });
         
         it('should return true for collection of truthy values when no test function is provided', function() {
@@ -232,6 +304,64 @@ describe('lodown', function() {
         it('should return false for collection of falsy values when no test function is provided', function() {
             expect(lodown.every(inputDataFalsy)).to.be.false;
         });
-
+    });
+    
+    describe('pluck', function() {
+        var inputData = [
+            { name: "Ralph", age: 22},
+            { name: "Jimmy", age: 13},
+            { name: "Carla", age: 20}
+        ];
+        it('should pluck properties out of an Array of objects, without side effects', function() {
+            expect(lodown.pluck(inputData, "name")).to.eql(["Ralph","Jimmy","Carla"]);
+            expect(inputData).to.eql([
+                { name: "Ralph", age: 22},
+                { name: "Jimmy", age: 13},
+                { name: "Carla", age: 20}
+            ]);
+        });
+    });
+    
+    describe('contains', function() {
+        var inputData = [1, "3", 4, 5, "a", "4", "b"];
+        it('should return true if a list contains an element, without side effects', function() {
+            expect(lodown.contains(inputData, "a")).to.be.true;
+            expect(inputData).to.eql([1, "3", 4, 5, "a", "4", "b"]);
+        });
+        it('should return false if a list does not contain an element', function() {
+            expect(lodown.contains(inputData, "c")).to.be.false;
+        });
+        it('should not coerce type when comparing.', function() {
+            expect(lodown.contains(inputData, 3)).to.be.false;
+        });
+        it('should not coerce type when comparing.', function() {
+            expect(lodown.contains(inputData, 3)).to.be.false;
+        });
+        it('should return true when object contains target value', function() {
+            expect(lodown.contains({one: 'a', two: 'b'}, 'b')).to.be.true;
+        });
+        it('should return false when object does not contain target value', function() {
+            expect(lodown.contains({one: 'a', two: 'b'}, 'c')).to.be.false;
+        });
+    });
+    
+    describe('extend', function() {
+        it('should copy key values from second argument Object into first', function() {
+            var inputData = {a: "one", b: "two"};
+            lodown.extend(inputData, {c: "three", d: "four"});
+            expect(inputData).to.eql({a: "one", b:"two", c:"three", d:"four"});
+        });
+        it('should overwrite existing properties', function() {
+            var inputData = {a:"one", b:"two"};
+            lodown.extend(inputData, {a: "three", d: "four"});
+            expect(inputData).to.eql({a: "three",b:"two",d:"four"});
+        });
+        
+        it('should handle any number of arguments.', function() {
+            var inputData = {a:"one", b:"two"};
+            lodown.extend(inputData);
+            expect(lodown.extend(inputData, {a:"three",c:"four"}, {d:"five",c:"six"})).to.eql({a:"three",b:"two",c:"six",d:"five"});
+        });
+        
     });
 });

@@ -6,13 +6,13 @@ function identity(value) {
 module.exports.identity = identity;
 
 function typeOf(value) {
-    if(Array.isArray(value)) {
+    if (Array.isArray(value)) {
         return 'array';
     } else if (value === null) {
         return 'null';
     } else if (value instanceof Date) {
         return 'date';
-    } 
+    }
     return typeof value;
 }
 module.exports.typeOf = typeOf;
@@ -60,8 +60,8 @@ module.exports.last = last;
  * collection
  */
 function each(collection, action) {
-    if(Array.isArray(collection)) {
-        for(var i = 0; i < collection.length; i++) {
+    if (Array.isArray(collection)) {
+        for (var i = 0; i < collection.length; i++) {
             action(collection[i], i, collection);
         }
     } else {
@@ -71,6 +71,15 @@ function each(collection, action) {
     }
 }
 module.exports.each = each;
+
+function eachRight(collection, action) {
+    if (Array.isArray(collection)) {
+        iterArrayAtRight(collection, action);
+    } else {
+        iterObjectAtRight(collection, action);
+    }
+}
+module.exports.eachRight = eachRight;
 
 /**
  * Takes a collection, and applies a tranformation function to each value in 
@@ -84,7 +93,7 @@ module.exports.each = each;
  */
 function map(collection, transform) {
     var mapped = [];
-    each(collection, function(value, position, collection) {
+    each(collection, function (value, position, collection) {
         mapped.push(transform(value, position, collection));
     });
     return mapped;
@@ -105,8 +114,8 @@ module.exports.map = map;
  */
 function filter(collection, test) {
     var filtered = [];
-    each(collection, function(value, position, collection) {
-        if(test(value, position, collection)) filtered.push(value);
+    each(collection, function (value, position, collection) {
+        if (test(value, position, collection)) filtered.push(value);
     });
     return filtered;
 }
@@ -152,83 +161,165 @@ function partition(array, test) {
 module.exports.partition = partition;
 
 function indexOf(array, target) {
-    for(var i = 0; i < array.length; i++) {
-        if (array[i] === target) { return i; }
+    for (var i = 0; i < array.length; i++) {
+        if (array[i] === target) {
+            return i;
+        }
     }
     return -1;
 }
 module.exports.indexOf = indexOf;
 
+/**
+ * pluck: Takes an Array of Object and returns an Array representing the values 
+ * of the specified key. The function map provide the same functionality.
+ * 
+ * @param {Array} collection An Array of Object on which to perform the key search.
+ * @param {String} key A String representing the key to look for in each Object
+ * if the Array.
+ * 
+ * @return {Array} An Array containing the values plucked at the given key from 
+ * the Array of Object.
+ */
+function pluck(collection, key) {
+    return map(collection, function (object) {
+      return object[key];
+    });
+}
+module.exports.pluck = pluck;
+
 function unique(array) {
-    return reduce(array, function(uniqueVals, value) {
+    return reduce(array, function (uniqueVals, value) {
         if (indexOf(uniqueVals, value) === -1) uniqueVals.push(value);
         return uniqueVals;
     }, []);
 }
 module.exports.unique = unique;
 
+function contains(collection, target) {
+    if (Array.isArray(collection)) {
+      if (indexOf(collection, target) > -1) return true;
+    } else {
+      for (var key in collection) {
+        if (collection[key] === target) return true;
+      }
+    }
+    return false;
+}
+module.exports.contains = contains;
+
 function reduce(collection, summarize, start) {
     var summary = start;
     var startAt = 0;
-    if(start === undefined) {
+    if (start === undefined) {
         summary = getFirstCollectionValue(collection);
         startAt = 1;
     }
-    eachAt(collection, function (value, position, collection) {
+    iterAt(collection, function (value, position, collection) {
         summary = summarize(summary, value, position, collection);
     }, startAt);
     return summary;
 }
 module.exports.reduce = reduce;
 
+function reduceRight(collection, combine, start) {
+  var startAtIndex, summary;
+  
+  if (start === undefined) {
+    startAtIndex = length(collection) - 2;
+    summary = getLastCollectionValue(collection);
+  } else {
+    startAtIndex = length(collection) - 1;
+    summary = start;
+  }
+  
+  iterAtRight(collection, function(value, position, collection) { 
+      summary = combine(summary, value, position, collection);
+  }, startAtIndex);
+  return summary;
+}
+module.exports.reduceRight = reduceRight;
+
 function getFirstCollectionValue(collection) {
-    if(Array.isArray(collection)) {
+    if (Array.isArray(collection)) {
         return collection[0];
     }
     return collection[first(Object.keys(collection))];
 }
 
+function getLastCollectionValue(collection) {
+    if (Array.isArray(collection)) {
+        return last(collection);
+    }
+    return collection[last(Object.keys(collection))];
+}
 
-function eachAt(collection, action, startAtIndex) {
+function length(collection) {
+    return collection.length || Object.keys(collection).length;
+}
+
+function iterAt(collection, action, startAtIndex) {
     startAtIndex = startAtIndex || 0;
-    if(Array.isArray(collection)) {
-        for(var i = startAtIndex; i < collection.length; i++) {
-            action(collection[i], i, collection);
-        }
+    if (Array.isArray(collection)) {
+        iterArrayAt(collection, action, startAtIndex);
     } else {
-        var keys = Object.keys(collection);
-        for(var j = startAtIndex; j < keys.length; j++) {
-            action(collection[keys[j]], keys[j], collection);
-        }
+        iterObjectAt(collection, action, startAtIndex);
     }
 }
-module.exports.eachAt = eachAt;
+module.exports.eachAt = iterAt;
 
-function eachAtRight(collection, action, startAtIndex) {
-    if(Array.isArray(collection)) {
-        startAtIndex = startAtIndex || collection.length - 1;
-        for(var i = startAtIndex; i < collection.length; i++) {
-            action(collection[i], i, collection);
-        }
+function iterAtRight(collection, action, startAtIndex) {
+    if (Array.isArray(collection)) {
+        iterArrayAtRight(collection, action, startAtIndex);
     } else {
-        var keys = Object.keys(collection);
-        startAtIndex = startAtIndex || keys.length - 1;
-        for(var j = startAtIndex; j < keys.length; j++) {
-            action(collection[keys[j]], keys[j], collection);
-        }
+        iterObjectAtRight(collection, action, startAtIndex);
     }
 }
-module.exports.eachAtRight = eachAtRight;
+module.exports.eachAtRight = iterAtRight;
+
+function iterArrayAt(array, action, startAtIndex) {
+    var i = startAtIndex || 0;
+    for (; i < array.length; i++) {
+        action(array[i], i, array);
+    }
+}
+
+function iterObjectAt(object, action, startAtIndex) {
+    var i = startAtIndex || 0;
+    var keys = Object.keys(object);
+    for (; i < keys.length; i++) {
+        action(object[keys[i]], keys[i], object);
+    }
+}
+
+function iterArrayAtRight(array, action, startAtIndex) {
+    var i = startAtIndex || array.length - 1;
+    for (; i > -1; i--) {
+        action(array[i], i, array);
+    }
+}
+
+function iterObjectAtRight(object, action, startAtIndex) {
+    var keys = Object.keys(object);
+    var i = startAtIndex || keys.length - 1;
+    for (; i > -1; i--) {
+        action(object[keys[i]], keys[i], object);
+    }
+}
 
 function some(collection, test) {
     test = test || identity;
-    if(Array.isArray(collection)) {
-        for(var i = 0; i < collection.length; i++) {
-            if(test(collection[i], i, collection)) { return true; }
+    if (Array.isArray(collection)) {
+        for (var i = 0; i < collection.length; i++) {
+            if (test(collection[i], i, collection)) {
+                return true;
+            }
         }
     } else {
-        for(var key in collection) {
-            if(test(collection[key], key, collection)) { return true; }
+        for (var key in collection) {
+            if (test(collection[key], key, collection)) {
+                return true;
+            }
         }
     }
     return false;
@@ -237,15 +328,30 @@ module.exports.some = some;
 
 function every(collection, test) {
     test = test || identity;
-    if(Array.isArray(collection)) {
-        for(var i = 0; i < collection.length; i++) {
-            if(!test(collection[i], i, collection)) { return false; }
+    if (Array.isArray(collection)) {
+        for (var i = 0; i < collection.length; i++) {
+            if (!test(collection[i], i, collection)) {
+                return false;
+            }
         }
     } else {
-        for(var key in collection) {
-            if(!test(collection[key], key, collection)) { return false; }
+        for (var key in collection) {
+            if (!test(collection[key], key, collection)) {
+                return false;
+            }
         }
     }
     return true;
 }
 module.exports.every = every;
+
+function extend(copyTo) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    iterArrayAt(sources, function (copyFrom) {
+        iterObjectAt(copyFrom, function (value, key) {
+            copyTo[key] = value;
+        });
+    });
+    return copyTo;
+}
+module.exports.extend = extend;
